@@ -63,7 +63,7 @@ export default class WindowCtrl {
   }
 
   onTmuxEvent(event: string, handler: Function) {
-    this.tmuxCtrl?.on(event, () => !this.blocker.isBlocked(event) && handler());
+    this.tmuxCtrl?.on(event, (...args) => !this.blocker.isBlocked(event) && handler(...args));
   }
 
   createControlledSession({uid, paneID}: {uid: string, paneID: TmuxID}) {
