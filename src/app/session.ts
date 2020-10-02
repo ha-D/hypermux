@@ -16,6 +16,7 @@ export default class ControlledSession extends EventEmitter {
 
     console.log('New controlled session', tmuxPaneID, hyperSessionUID)
     tmuxCtrl.registerOutputReceiver(tmuxPaneID, (data) => this.emit('data', `${this.hyperSessionUID}${data}`));
+    tmuxCtrl.capturePaneOutputs(tmuxPaneID)
   }
 
   exit(): void {

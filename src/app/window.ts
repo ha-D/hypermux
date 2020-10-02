@@ -57,7 +57,7 @@ export default class WindowCtrl {
     this.rpc.on(TM_RESIZE, (args) => !bl.isBlocked(TM_RESIZE) && this.onHyperResized(args));
 
     this.onTmuxEvent('window-pane-changed', (_: any, paneID: TmuxID) => this.rpc.emit(TM_PANE_CHANGED, {sessionUID: this.pane2HyperSession[paneID]}));
-    this.onTmuxEvent('session-window-changed', (windowID: TmuxID) => this.rpc.emit(TM_PANE_CHANGED, {sessionUID: this.pane2HyperSession[this.findActivePane(this.windows[windowID].pane)?.id!]}));
+    this.onTmuxEvent('session-window-changed', (windowID: TmuxID) => this.onTmuxWindowChanged(windowID));
     this.onTmuxEvent('layout-change', () => this.syncPanes());
     this.syncPanes();
   }
@@ -84,10 +84,17 @@ export default class WindowCtrl {
     });    
   }
 
-  findActivePane(pane: TmuxPane): TmuxConsolePane | null {
+  findActivePane(windowID: TmuxID, pane?: TmuxPane): TmuxConsolePane | null {
+    if (pane === undefined) {
+      pane = this.windows[windowID]?.pane;
+      if (pane === undefined) {
+        return null;
+      }
+    }
+
     if ('panes' in pane) {
       for (const child of pane.panes) {
-        const activePane = this.findActivePane(child);
+        const activePane = this.findActivePane(windowID, child);
         if (activePane) {
           return activePane;
         }
@@ -130,5 +137,12 @@ export default class WindowCtrl {
 
     await sleep(500);
     unblock();
+  }
+
+  async onTmuxWindowChanged(windowID: TmuxID) {
+    const activePane = this.findActivePane(windowID);
+    if (activePane != null) {
+      this.rpc.emit(TM_PANE_CHANGED, {sessionUID: this.pane2HyperSession[activePane.id]})
+    }
   }
 }

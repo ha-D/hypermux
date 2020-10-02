@@ -3,7 +3,7 @@ import { IPty } from "./hyper";
 import Queue from "../utils/queue";
 import Scanner from "../utils/scanner";
 import { TmuxID, TmuxPane, TmuxPanes, TmuxSplitDirection, TmuxWindow } from "../types";
-import { keyBy } from "lodash";
+import { dropRightWhile, keyBy } from "lodash";
 
 type PromiseResolver = {resolve: (arg: string[]) => void, reject: (arg: string[]) => void};
 type OutputReceiver = (arg: string) => void;
@@ -83,7 +83,7 @@ export default class TmuxCtrl extends EventEmitter {
       this.write(cmd);
     })
     .catch(e => {
-      console.error(e);
+      console.error("TMux command error:", e);
       throw e;
     }) as Promise<string[]>;
   }
@@ -101,6 +101,15 @@ export default class TmuxCtrl extends EventEmitter {
 
   sendSpecial(data: string) {
     return this.command(`send ${data}`)
+  }
+
+  async capturePaneOutputs(paneID: TmuxID) {
+    const receiver = this.outputReceivers[paneID];
+    if (receiver !== undefined) {
+      const output = await this.command(`capture-pane -eCJpt %${paneID}`);
+      const filteredOutput = dropRightWhile(output, (o) => o === '');
+      receiver(this.unescape(filteredOutput.join('\r\n')));
+    }
   }
 
   selectPane(paneID: TmuxID) {
