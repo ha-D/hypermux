@@ -1,0 +1,40 @@
+{
+  "version": "0.1.0",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "engines": {
+    "node": ">=10"
+  },
+  "scripts": {
+    "start": "tsc --build tsconfig.json --watch",
+    "build": "tsc --build tsconfig.json",
+    "test": "tsc test",
+    "lint": "tsc lint",
+    "prepare": "tsc --build tsconfig.json"
+  },
+  "peerDependencies": {},
+  "prettier": {
+    "printWidth": 80,
+    "semi": true,
+    "singleQuote": true,
+    "trailingComma": "es5"
+  },
+  "name": "hypermux",
+  "author": "Hadi Zolfaghari",
+  "devDependencies": {
+    "@types/lodash": "^4.14.161",
+    "@types/node": "12.12.6",
+    "tslib": "^2.0.1",
+    "typescript": "^4.0.2"
+  },
+  "dependencies": {
+    "lodash": "^4.17.20",
+    "lodash-es": "^4.17.15",
+    "seamless-immutable": "^7.1.4"
+  } 
+}
