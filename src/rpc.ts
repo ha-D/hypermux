@@ -7,6 +7,7 @@ export const TM_SYNC_LAYOUT = "tmux:sync";
 export const TM_REQUEST_SYNC = "tmux:request:sync";
 export const TM_REQUEST_SESSION = "tmux:request:session";
 export const TM_RESIZE = "tmux:resize";
+export const TM_SPLIT = "tmux:split";
 
 export interface TmuxStartMessage {
   sessionUID: HyperUID;
@@ -37,12 +38,18 @@ export interface ResizeMessage {
   windowRows: number | null;
 }
 
+export interface SplitPaneMessage {
+  direction: TmuxSplitDirection;
+  session: HyperUID | null;
+}
+
 export interface RendererRPC {
   emit(event: typeof TM_START, args: TmuxStartMessage): boolean;
   emit(event: typeof TM_PANE_CHANGED, args: ActiveSessionChangedMessage): boolean;
   emit(event: typeof TM_REQUEST_SYNC): boolean;
   emit(event: typeof TM_WINDOW_CHANGED, args: ActiveWindowChangedMessage): boolean;
   emit(event: typeof TM_RESIZE, args: ResizeMessage): boolean;
+  emit(event: typeof TM_SPLIT, args: SplitPaneMessage): boolean;
   emit(event: 'new', args: any): boolean;
 
   on(event: typeof TM_PANE_CHANGED, listener: (args: ActiveSessionChangedMessage) => void): this;
@@ -61,4 +68,5 @@ export interface AppRPC {
   on(event: typeof TM_REQUEST_SYNC, listener: () => void): this;
   on(event: typeof TM_WINDOW_CHANGED, listener: (args: ActiveWindowChangedMessage) => void): this;
   on(event: typeof TM_RESIZE, listener: (args: ResizeMessage) => void): this;
+  on(event: typeof TM_SPLIT, listener: (args: SplitPaneMessage) => void): this;
 }

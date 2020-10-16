@@ -1,6 +1,6 @@
 import { debounce } from 'lodash';
 import { AnyAction, Dispatch, Middleware, MiddlewareAPI } from "redux";
-import { RendererRPC, TM_PANE_CHANGED, TM_RESIZE, TM_START, TM_WINDOW_CHANGED } from '../rpc';
+import { RendererRPC, TM_PANE_CHANGED, TM_RESIZE, TM_SPLIT, TM_START, TM_WINDOW_CHANGED } from '../rpc';
 import { HyperUID } from '../types';
 import EventBlocker from '../utils/blocker';
 import { HyperState, HyperTermGroup } from './hyper';
@@ -17,7 +17,8 @@ type Params = {
 const preHandlers: Record<string, (params: Params) => any> = {
   'SESSION_PTY_DATA': onPtyData,
   'SESSION_SET_ACTIVE': ({action, rpc}) => rpc.emit(TM_PANE_CHANGED, { sessionUID: action.uid }),
-  'CHANGE_TAB': ({action, rpc}) => rpc.emit(TM_WINDOW_CHANGED, {windowID: getTmuxWindowFromTermGroup(action.uid)!})
+  'CHANGE_TAB': ({action, rpc}) => rpc.emit(TM_WINDOW_CHANGED, {windowID: getTmuxWindowFromTermGroup(action.uid)!}),
+  'UI_COMMAND_EXEC': onUICommand,
 };
 
 const postHandlers: Record<string, (params: Params) => any> = {
@@ -102,4 +103,19 @@ function onResize({store, rpc, action}: Params) {
   }
   
   rpc.emit(TM_RESIZE, {sessionUID: action.uid, paneRows: action.rows, paneCols: action.cols, windowRows, windowCols})
+}
+
+function onUICommand({action, rpc, store}: Params) {
+  const {sessions} : HyperState = store.getState();
+
+  switch(action.command) {
+    case 'pane:splitRight':
+      rpc.emit(TM_SPLIT, {direction: "HORIZONTAL", session: sessions.activeUid})
+      return CANCEL
+    case 'pane:splitDown':
+      rpc.emit(TM_SPLIT, {direction: "VERTICAL", session: sessions.activeUid})
+      return CANCEL
+  }
+
+  return;
 }

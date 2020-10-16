@@ -124,6 +124,19 @@ export default class TmuxCtrl extends EventEmitter {
     return this.command(`resize-pane -t ${paneID} -x ${cols} -y ${rows}`);
   }
 
+  splitWindow({paneID, direction}: {paneID?: TmuxID, direction?: TmuxSplitDirection}) {
+    let cmd = "";
+    if (paneID) {
+      cmd += ` -t $paneID`
+    }
+    if (direction === 'VERTICAL') {
+      cmd += ` -v`
+    } else if (direction === 'HORIZONTAL') {
+      cmd += ` -h`
+    }
+    return this.command(`split-window${cmd}`);
+  }
+
   async getWindowSize(): Promise<{rows: number, cols: number}> {
     const resp = await this.command('list-windows -F "#{window_height} #{window_width}"');
     const [rows, cols] = resp[0].split(' ').map(r => parseInt(r));

@@ -1,5 +1,5 @@
 import { HyperUID, TmuxConsolePane, TmuxID, TmuxPane, TmuxPanes, TmuxSplitDirection, TmuxWindow } from '../types';
-import { AppRPC, TmuxStartMessage, TM_REQUEST_SESSION, TM_REQUEST_SYNC, TM_PANE_CHANGED, TM_START, TM_SYNC_LAYOUT, TM_WINDOW_CHANGED, TM_RESIZE, ResizeMessage } from '../rpc';
+import { AppRPC, TmuxStartMessage, TM_REQUEST_SESSION, TM_REQUEST_SYNC, TM_PANE_CHANGED, TM_START, TM_SYNC_LAYOUT, TM_WINDOW_CHANGED, TM_RESIZE, ResizeMessage, TM_SPLIT, SplitPaneMessage } from '../rpc';
 import { HyperApp, HyperSession, HyperWindow } from './hyper';
 import ControlledSession from './session';
 import TmuxCtrl from './tmux';
@@ -39,10 +39,6 @@ export default class WindowCtrl {
   }
   
   initTmux(hyperCtrlSession: HyperSession) {
-    // this.rpc.removeAllListeners('tmux:session:start');
-    // this.rpc.removeAllListeners('tmux:control:data');
-
-    
     this.hyperCtrlSession = hyperCtrlSession;
     this.tmuxCtrl = new TmuxCtrl(hyperCtrlSession.pty);
 
@@ -55,6 +51,7 @@ export default class WindowCtrl {
     this.rpc.on(TM_PANE_CHANGED, ({sessionUID}) => !bl.isBlocked(TM_PANE_CHANGED) && this.hyperSessions[sessionUID].setActive());
     this.rpc.on(TM_WINDOW_CHANGED, ({windowID}) => !bl.isBlocked(TM_WINDOW_CHANGED) && this.tmuxCtrl?.command(`select-window -t @${windowID}`));
     this.rpc.on(TM_RESIZE, (args) => !bl.isBlocked(TM_RESIZE) && this.onHyperResized(args));
+    this.rpc.on(TM_SPLIT, (arg) => !bl.isBlocked(TM_SPLIT) && this.splitPane(arg));
 
     this.onTmuxEvent('window-pane-changed', (_: any, paneID: TmuxID) => this.rpc.emit(TM_PANE_CHANGED, {sessionUID: this.pane2HyperSession[paneID]}));
     this.onTmuxEvent('session-window-changed', (windowID: TmuxID) => this.onTmuxWindowChanged(windowID));
@@ -144,5 +141,13 @@ export default class WindowCtrl {
     if (activePane != null) {
       this.rpc.emit(TM_PANE_CHANGED, {sessionUID: this.pane2HyperSession[activePane.id]})
     }
+  }
+
+  splitPane({direction, session}: SplitPaneMessage) {
+    let paneID: TmuxID | undefined;
+    if (session) {
+      paneID = this.hyperSessions[session].tmuxPaneID;
+    }
+    this.tmuxCtrl?.splitWindow({paneID, direction})
   }
 }
